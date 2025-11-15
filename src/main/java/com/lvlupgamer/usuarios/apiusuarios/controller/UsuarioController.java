@@ -1,6 +1,7 @@
 package com.lvlupgamer.usuarios.apiusuarios.controller;
 
 import java.util.List;
+import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -34,6 +35,35 @@ public class UsuarioController {
 
     @Autowired
     private UsuarioService usuarioService;
+
+    @PostMapping("/login")
+public ResponseEntity<ApiResponse<UsuarioDTO>> login(@RequestBody Map<String, String> credentials) {
+    try {
+        String email = credentials.get("email");
+        String password = credentials.get("password");
+
+        UsuarioDTO usuarioDTO = usuarioService.login(email, password);
+        ApiResponse<UsuarioDTO> response = ApiResponse.<UsuarioDTO>builder()
+            .success(true)
+            .message("Login exitoso")
+            .data(usuarioDTO)
+            .code(200)
+            .build();
+
+        return ResponseEntity.ok(response);
+
+    } catch (Exception e) {
+        ApiResponse<UsuarioDTO> response = ApiResponse.<UsuarioDTO>builder()
+            .success(false)
+            .message(e.getMessage())
+            .code(401)
+            .build();
+
+        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+    }
+}
+
+
 
     @PostMapping("/registro")
     public ResponseEntity<ApiResponse<UsuarioDTO>> registrar(

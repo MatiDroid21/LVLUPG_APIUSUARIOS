@@ -3,6 +3,7 @@ package com.lvlupgamer.usuarios.apiusuarios.services;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -52,9 +53,6 @@ public class UsuarioService {
             throw new Exception("El RUT ya se encuentra registrado");
         }
 
-        if (!usuarioRegistroDTO.getContrasena().equals(usuarioRegistroDTO.getConfirmarContrasena())) {
-            throw new Exception("Las contraseñas no coinciden");
-        }
 
         validarMayorDeEdad(usuarioRegistroDTO.getFechaNacimiento());
 
@@ -208,4 +206,39 @@ public class UsuarioService {
         usuarioRepository.deleteById(idUsuario);
         log.info("Usuario eliminado: {}", idUsuario);
     }
+
+    public UsuarioDTO convertirAUsuarioDTO(Usuario usuario) {
+        UsuarioDTO dto = new UsuarioDTO();
+        dto.setIdUsuario(usuario.getIdUsuario());
+        dto.setNombre(usuario.getNombre());
+        dto.setEmail(usuario.getEmail());
+        dto.setRut(usuario.getRut());
+        dto.setFechaNacimiento(usuario.getFechaNacimiento());
+        dto.setPuntos(usuario.getPuntos());
+        dto.setCodigoReferido(usuario.getCodigoReferido());
+        dto.setIdRol(usuario.getRol() != null ? usuario.getRol().getIdRol() : null);
+        dto.setNombreRol(usuario.getRol() != null ? usuario.getRol().getNombre() : null);
+
+        // Asumiendo que el campo fotoPerfil es un byte[] en Usuario
+        if (usuario.getFoto() != null) {
+            dto.setFotoNombre(usuario.getFotoNombre());
+            dto.setFotoTipo(usuario.getFotoTipo());
+            dto.setFotoTamano((long) usuario.getFoto().length);
+            dto.setFotoFromBytes(usuario.getFoto());
+        }
+        return dto;
+    }
+
+
+public UsuarioDTO login(String email, String plainPassword) {
+    Usuario usuario = usuarioRepository.findByEmail(email)
+        .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+    if (!passwordEncoder.matches(plainPassword, usuario.getContrasena())) {
+        throw new RuntimeException("Contraseña incorrecta");
+    }
+
+    return convertirAUsuarioDTO(usuario);
+}
+
+
 }
