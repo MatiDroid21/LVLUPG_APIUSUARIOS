@@ -1,57 +1,32 @@
 package com.lvlupgamer.usuarios.apiusuarios.mapper;
 
-import com.lvlupgamer.usuarios.apiusuarios.model.Usuario;
 import com.lvlupgamer.usuarios.apiusuarios.dto.UsuarioDTO;
-import org.springframework.stereotype.Component;
+import com.lvlupgamer.usuarios.apiusuarios.dto.UsuarioRegistroDTO;
+import com.lvlupgamer.usuarios.apiusuarios.model.Usuario;
+import org.mapstruct.*;
 
-@Component
-public class UsuarioMapper {
+@Mapper(componentModel = "spring")
+public interface UsuarioMapper {
 
-    public UsuarioDTO toDTO(Usuario usuario) {
-        if (usuario == null) {
-            return null;
-        }
+	@Mapping(source = "rol.nombre", target = "rolNombre")
+	@Mapping(target = "fotoNombre", source = "fotoNombre")
+	@Mapping(target = "fotoTipo", source = "fotoTipo")
+	@Mapping(target = "fotoTamano", source = "fotoTamano")
+	// AGREGA LOS NUEVOS CAMPOS
+	@Mapping(target = "direccion", source = "direccion")
+	@Mapping(target = "telefono", source = "telefono")
+	UsuarioDTO toDTO(Usuario usuario);
 
-        UsuarioDTO dto = UsuarioDTO.builder()
-                .idUsuario(usuario.getIdUsuario())
-                .nombre(usuario.getNombre())
-                .rut(usuario.getRut())
-                .email(usuario.getEmail())
-                .fechaNacimiento(usuario.getFechaNacimiento())
-                .puntos(usuario.getPuntos())
-                .codigoReferido(usuario.getCodigoReferido())
-                // MAPEA EL ROL
-                .idRol(usuario.getRol() != null ? usuario.getRol().getIdRol() : null)
-                .nombreRol(usuario.getRol() != null ? usuario.getRol().getNombre() : null)
-                .fotoNombre(usuario.getFotoNombre())
-                .fotoTipo(usuario.getFotoTipo())
-                .fotoTamano(usuario.getFotoTamano())
-                .build();
-
-        if (usuario.getFoto() != null) {
-            dto.setFotoFromBytes(usuario.getFoto());
-        }
-
-        return dto;
-    }
-
-    public Usuario toEntity(UsuarioDTO dto) {
-        if (dto == null) {
-            return null;
-        }
-
-        return Usuario.builder()
-                .idUsuario(dto.getIdUsuario())
-                .nombre(dto.getNombre())
-                .rut(dto.getRut())
-                .email(dto.getEmail())
-                .fechaNacimiento(dto.getFechaNacimiento())
-                .puntos(dto.getPuntos())
-                .codigoReferido(dto.getCodigoReferido())
-                .fotoNombre(dto.getFotoNombre())
-                .fotoTipo(dto.getFotoTipo())
-                .fotoTamano(dto.getFotoTamano())
-                // No se mapea el Rol completo aquí (se debe hacer en el Service)
-                .build();
-    }
+	@Mapping(target = "idUsuario", ignore = true)
+	@Mapping(target = "fechaRegistro", expression = "java(java.time.LocalDateTime.now())")
+	@Mapping(target = "puntos", constant = "0")
+	@Mapping(target = "rol", ignore = true)  // se asigna en servicio
+	@Mapping(target = "foto", ignore = true) // se asigna en servicio
+	@Mapping(target = "fotoNombre", ignore = true)
+	@Mapping(target = "fotoTipo", ignore = true)
+	@Mapping(target = "fotoTamano", ignore = true)
+	// AGREGA LOS NUEVOS CAMPOS
+    @Mapping(source = "direccion", target = "direccion")
+    @Mapping(source = "telefono", target = "telefono")
+	Usuario toEntity(UsuarioRegistroDTO dto);
 }

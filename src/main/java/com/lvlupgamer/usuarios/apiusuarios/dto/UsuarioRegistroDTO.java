@@ -2,6 +2,8 @@ package com.lvlupgamer.usuarios.apiusuarios.dto;
 
 import jakarta.validation.constraints.*;
 import lombok.*;
+import org.springframework.web.multipart.MultipartFile;
+
 import java.time.LocalDate;
 
 @Data
@@ -9,33 +11,38 @@ import java.time.LocalDate;
 @AllArgsConstructor
 @Builder
 public class UsuarioRegistroDTO {
-    
-    @NotBlank(message = "El nombre es obligatorio")
-    @Size(min = 2, max = 100, message = "El nombre debe tener entre 2 y 100 caracteres")
+
+    @NotBlank
+    @Size(max = 100)
     private String nombre;
-    
-    @NotBlank(message = "El RUT es obligatorio")
-    @Size(max = 100, message = "El RUT no puede exceder 100 caracteres")
+
+    @NotBlank
+    @Size(max = 100)
     private String rut;
-    
-    @NotBlank(message = "El email es obligatorio")
-    @Email(message = "Email inválido")
+
+    @Email
+    @NotBlank
+    @Size(max = 150)
     private String email;
-    
-    @NotBlank(message = "La contraseña es obligatoria")
-    @Size(min = 6, message = "La contraseña debe tener al menos 6 caracteres")
+
+    @Size(min = 6, max = 100)
+    @NotBlank
     private String contrasena;
-    
-    @NotBlank(message = "Debe confirmar la contraseña")
-    private String confirmarContrasena;
-    
-    @NotNull(message = "La fecha de nacimiento es obligatoria")
-    @Past(message = "La fecha de nacimiento debe ser en el pasado")
+
+    @Past
     private LocalDate fechaNacimiento;
-    
-    private Long referidoPor;
-    
-    // ROL POR DEFECTO (NUEVO)
-    @Builder.Default
-    private Long idRol = 1L;
+
+    @NotNull
+    private Long idRol;
+
+    private String codigoReferido;
+
+    @NotNull
+    private MultipartFile foto; // para recibir la imagen en multipart/form-data
+    @NotBlank
+    private String direccion;
+
+    @NotBlank
+    private String telefono;
+
 }

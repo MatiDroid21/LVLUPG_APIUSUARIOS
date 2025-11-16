@@ -1,266 +1,81 @@
 package com.lvlupgamer.usuarios.apiusuarios.controller;
 
-import java.util.List;
-import java.util.Map;
-
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.ModelAttribute;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.multipart.MultipartFile;
-
-import com.lvlupgamer.usuarios.apiusuarios.dto.ApiResponse;
+import com.lvlupgamer.usuarios.apiusuarios.dto.LoginRequest;
 import com.lvlupgamer.usuarios.apiusuarios.dto.UsuarioDTO;
 import com.lvlupgamer.usuarios.apiusuarios.dto.UsuarioRegistroDTO;
 import com.lvlupgamer.usuarios.apiusuarios.services.UsuarioService;
+import lombok.RequiredArgsConstructor;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.validation.Valid;
-import lombok.extern.slf4j.Slf4j;
-
+import java.util.List;
 @RestController
 @RequestMapping("/api/usuarios")
-@CrossOrigin(origins = "*", allowedHeaders = "*")
-@Slf4j
+@RequiredArgsConstructor
 public class UsuarioController {
 
-    @Autowired
-    private UsuarioService usuarioService;
+    private final UsuarioService usuarioService;
 
     @PostMapping("/login")
-public ResponseEntity<ApiResponse<UsuarioDTO>> login(@RequestBody Map<String, String> credentials) {
-    try {
-        String email = credentials.get("email");
-        String password = credentials.get("password");
-
-        UsuarioDTO usuarioDTO = usuarioService.login(email, password);
-        ApiResponse<UsuarioDTO> response = ApiResponse.<UsuarioDTO>builder()
-            .success(true)
-            .message("Login exitoso")
-            .data(usuarioDTO)
-            .code(200)
-            .build();
-
-        return ResponseEntity.ok(response);
-
-    } catch (Exception e) {
-        ApiResponse<UsuarioDTO> response = ApiResponse.<UsuarioDTO>builder()
-            .success(false)
-            .message(e.getMessage())
-            .code(401)
-            .build();
-
-        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
+    public ResponseEntity<UsuarioDTO> login(@RequestBody LoginRequest login) {
+    UsuarioDTO dto = usuarioService.login(login.getEmail(), login.getContrasena());
+    // si usas JWT, aquí devuelves el token
+    return ResponseEntity.ok(dto);
     }
-}
 
-
-
+    // 1. REGISTRAR USUARIO (con foto)
     @PostMapping("/registro")
-    public ResponseEntity<ApiResponse<UsuarioDTO>> registrar(
-            @Valid @ModelAttribute UsuarioRegistroDTO usuarioRegistroDTO,
-            @RequestParam("fotoPerfil") MultipartFile fotoPerfil) {
-
-        try {
-            log.info("Solicitud de registro para email: {}", usuarioRegistroDTO.getEmail());
-            
-            UsuarioDTO usuarioDTO = usuarioService.registrarUsuario(usuarioRegistroDTO, fotoPerfil);
-            
-            ApiResponse<UsuarioDTO> response = ApiResponse.<UsuarioDTO>builder()
-                    .success(true)
-                    .message("Usuario registrado exitosamente")
-                    .data(usuarioDTO)
-                    .code(201)
-                    .build();
-            
-            return ResponseEntity.status(HttpStatus.CREATED).body(response);
-
-        } catch (Exception e) {
-            log.error("Error en registro: {}", e.getMessage());
-            
-            ApiResponse<UsuarioDTO> response = ApiResponse.<UsuarioDTO>builder()
-                    .success(false)
-                    .message(e.getMessage())
-                    .code(400)
-                    .build();
-            
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-        }
+    public ResponseEntity<UsuarioDTO> registrar(
+        @Valid @ModelAttribute UsuarioRegistroDTO registroDTO
+    ) throws Exception {
+        UsuarioDTO usuarioDTO = usuarioService.registrarUsuario(registroDTO);
+        return ResponseEntity.status(201).body(usuarioDTO);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<ApiResponse<UsuarioDTO>> obtenerPorId(@PathVariable Long id) {
-        try {
-            UsuarioDTO usuarioDTO = usuarioService.obtenerUsuarioById(id);
-            
-            ApiResponse<UsuarioDTO> response = ApiResponse.<UsuarioDTO>builder()
-                    .success(true)
-                    .message("Usuario encontrado")
-                    .data(usuarioDTO)
-                    .code(200)
-                    .build();
-            
-            return ResponseEntity.ok(response);
-
-        } catch (Exception e) {
-            log.error("Error al obtener usuario: {}", e.getMessage());
-            
-            ApiResponse<UsuarioDTO> response = ApiResponse.<UsuarioDTO>builder()
-                    .success(false)
-                    .message(e.getMessage())
-                    .code(404)
-                    .build();
-            
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
-        }
+    // 2. OBTENER USUARIO POR EMAIL
+    @GetMapping("/{email}")
+    public ResponseEntity<UsuarioDTO> obtenerPorEmail(@PathVariable String email) {
+        UsuarioDTO usuarioDTO = usuarioService.obtenerPorEmail(email);
+        return ResponseEntity.ok(usuarioDTO);
     }
 
-    @GetMapping("/email/{email}")
-    public ResponseEntity<ApiResponse<UsuarioDTO>> obtenerPorEmail(@PathVariable String email) {
-        try {
-            UsuarioDTO usuarioDTO = usuarioService.obtenerUsuarioPorEmail(email);
-            
-            ApiResponse<UsuarioDTO> response = ApiResponse.<UsuarioDTO>builder()
-                    .success(true)
-                    .message("Usuario encontrado")
-                    .data(usuarioDTO)
-                    .code(200)
-                    .build();
-            
-            return ResponseEntity.ok(response);
-
-        } catch (Exception e) {
-            log.error("Error al obtener usuario por email: {}", e.getMessage());
-            
-            ApiResponse<UsuarioDTO> response = ApiResponse.<UsuarioDTO>builder()
-                    .success(false)
-                    .message(e.getMessage())
-                    .code(404)
-                    .build();
-            
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
-        }
-    }
-
+    // 3. LISTAR TODOS LOS USUARIOS
     @GetMapping
-    public ResponseEntity<ApiResponse<List<UsuarioDTO>>> obtenerTodos() {
-        try {
-            List<UsuarioDTO> usuarios = usuarioService.obtenerTodos();
-            
-            ApiResponse<List<UsuarioDTO>> response = ApiResponse.<List<UsuarioDTO>>builder()
-                    .success(true)
-                    .message("Usuarios obtenidos correctamente")
-                    .data(usuarios)
-                    .code(200)
-                    .build();
-            
-            return ResponseEntity.ok(response);
-
-        } catch (Exception e) {
-            log.error("Error al obtener usuarios: {}", e.getMessage());
-            
-            ApiResponse<List<UsuarioDTO>> response = ApiResponse.<List<UsuarioDTO>>builder()
-                    .success(false)
-                    .message(e.getMessage())
-                    .code(400)
-                    .build();
-            
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-        }
+    public ResponseEntity<List<UsuarioDTO>> listarTodos() {
+        return ResponseEntity.ok(usuarioService.listarUsuarios());
     }
 
-    @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<UsuarioDTO>> actualizar(
-            @PathVariable Long id,
-            @Valid @RequestBody UsuarioDTO usuarioDTO) {
-
-        try {
-            UsuarioDTO usuarioActualizado = usuarioService.actualizar(id, usuarioDTO);
-            
-            ApiResponse<UsuarioDTO> response = ApiResponse.<UsuarioDTO>builder()
-                    .success(true)
-                    .message("Usuario actualizado exitosamente")
-                    .data(usuarioActualizado)
-                    .code(200)
-                    .build();
-            
-            return ResponseEntity.ok(response);
-
-        } catch (Exception e) {
-            log.error("Error al actualizar usuario: {}", e.getMessage());
-            
-            ApiResponse<UsuarioDTO> response = ApiResponse.<UsuarioDTO>builder()
-                    .success(false)
-                    .message(e.getMessage())
-                    .code(400)
-                    .build();
-            
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-        }
-    }
-
-    @PutMapping("/{id}/foto")
-    public ResponseEntity<ApiResponse<UsuarioDTO>> actualizarFoto(
-            @PathVariable Long id,
-            @RequestParam("fotoPerfil") MultipartFile fotoPerfil) {
-
-        try {
-            UsuarioDTO usuarioActualizado = usuarioService.actualizarFotoPerfil(id, fotoPerfil);
-            
-            ApiResponse<UsuarioDTO> response = ApiResponse.<UsuarioDTO>builder()
-                    .success(true)
-                    .message("Foto de perfil actualizada exitosamente")
-                    .data(usuarioActualizado)
-                    .code(200)
-                    .build();
-            
-            return ResponseEntity.ok(response);
-
-        } catch (Exception e) {
-            log.error("Error al actualizar foto: {}", e.getMessage());
-            
-            ApiResponse<UsuarioDTO> response = ApiResponse.<UsuarioDTO>builder()
-                    .success(false)
-                    .message(e.getMessage())
-                    .code(400)
-                    .build();
-            
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
-        }
-    }
-
+    // 4. ELIMINAR USUARIO POR ID
     @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<Void>> eliminar(@PathVariable Long id) {
-        try {
-            usuarioService.eliminar(id);
-            
-            ApiResponse<Void> response = ApiResponse.<Void>builder()
-                    .success(true)
-                    .message("Usuario eliminado exitosamente")
-                    .code(200)
-                    .build();
-            
-            return ResponseEntity.ok(response);
+    public ResponseEntity<Void> eliminarUsuario(@PathVariable Long id) {
+        usuarioService.eliminarUsuario(id);
+        return ResponseEntity.noContent().build();
+    }
 
-        } catch (Exception e) {
-            log.error("Error al eliminar usuario: {}", e.getMessage());
-            
-            ApiResponse<Void> response = ApiResponse.<Void>builder()
-                    .success(false)
-                    .message(e.getMessage())
-                    .code(404)
-                    .build();
-            
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body(response);
-        }
+    // 5. ACTUALIZAR DATOS USUARIO (excepto foto y password)
+    @PutMapping("/{id}")
+    public ResponseEntity<UsuarioDTO> actualizarUsuario(
+        @PathVariable Long id, @RequestBody UsuarioDTO dto) {
+        UsuarioDTO actualizado = usuarioService.actualizarUsuario(id, dto);
+        return ResponseEntity.ok(actualizado);
+    }
+
+    // 6. ACTUALIZAR SOLO LA FOTO
+    @PatchMapping("/{id}/foto")
+    public ResponseEntity<UsuarioDTO> actualizarFoto(
+        @PathVariable Long id,
+        @RequestParam("foto") MultipartFile nuevaFoto
+    ) throws Exception {
+        UsuarioDTO actualizado = usuarioService.actualizarFoto(id, nuevaFoto);
+        return ResponseEntity.ok(actualizado);
+    }
+
+    // 7. DESCARGAR/DESPLEGAR FOTO
+    @GetMapping("/{id}/foto")
+    public ResponseEntity<byte[]> obtenerFoto(@PathVariable Long id) {
+        return usuarioService.obtenerFoto(id);
     }
 }
