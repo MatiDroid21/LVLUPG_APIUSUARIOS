@@ -78,6 +78,7 @@ public class UsuarioService {
         usuario.setEmail(dto.getEmail());
         usuario.setCodigoReferido(dto.getCodigoReferido());
         usuario.setFechaNacimiento(dto.getFechaNacimiento());
+        usuario.setTelefono(dto.getTelefono());
         // No se actualizan puntos ni foto aquí por claridad
 
         Usuario actualizado = usuarioRepository.save(usuario);
@@ -96,14 +97,15 @@ public class UsuarioService {
         return usuarioMapper.toDTO(actualizado);
     }
 
-    public ResponseEntity<byte[]> obtenerFoto(Long id) {
-        Usuario usuario = usuarioRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
-        return ResponseEntity.ok()
-            .header("Content-Type", usuario.getFotoTipo())
-            .header("Content-Disposition", "inline; filename=\"" + usuario.getFotoNombre() + "\"")
-            .body(usuario.getFoto());
-    }
+   public ResponseEntity<byte[]> obtenerFoto(Long id) {
+    Usuario usuario = usuarioRepository.findById(id)
+        .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+    return ResponseEntity.ok()
+        .header("Content-Type", usuario.getFotoTipo())
+        .header("Content-Disposition", "inline; filename=\"" + usuario.getFotoNombre() + "\"")
+        .body(usuario.getFoto());
+}
+
 
     public UsuarioDTO login(String email, String contrasena) {
     Usuario usuario = usuarioRepository.findByEmail(email)
