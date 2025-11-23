@@ -82,4 +82,7 @@ public class Usuario {
     @Column(name = "telefono", length = 30)
     private String telefono;
 
+    @Column(name = "uid_firebase", length = 100, unique = true)
+    private String uidFirebase;
+    
 }

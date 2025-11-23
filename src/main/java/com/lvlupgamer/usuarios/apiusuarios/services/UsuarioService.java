@@ -61,6 +61,8 @@ public class UsuarioService {
             .toList();
     }
 
+
+
     @Transactional
     public void eliminarUsuario(Long id) {
         if (!usuarioRepository.existsById(id)) {
@@ -115,6 +117,14 @@ public class UsuarioService {
     }
     return usuarioMapper.toDTO(usuario);
 }
+
+public UsuarioDTO obtenerPorUid(String uid) {
+    Usuario usuario = usuarioRepository.findByUidFirebase(uid)
+        .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+    return usuarioMapper.toDTO(usuario); 
+
+}
+
 
 
 }
